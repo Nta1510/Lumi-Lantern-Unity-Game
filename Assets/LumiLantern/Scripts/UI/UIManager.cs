@@ -731,6 +731,35 @@ namespace LumiLantern
             winCardRect.anchoredPosition = target;
         }
 
+        public bool IsChapterSelectOpen()
+        {
+            return chapterPanelObj != null && chapterPanelObj.activeSelf;
+        }
+
+        public bool IsWinModalOpen()
+        {
+            return winModalObj != null && winModalObj.activeSelf;
+        }
+
+        private float lastAspect = -1f;
+
+        private void Update()
+        {
+            if (mainCanvas != null)
+            {
+                float currentAspect = (float)Screen.width / Mathf.Max(1, Screen.height);
+                if (Mathf.Abs(lastAspect - currentAspect) > 0.02f)
+                {
+                    lastAspect = currentAspect;
+                    CanvasScaler scaler = mainCanvas.GetComponent<CanvasScaler>();
+                    if (scaler != null)
+                    {
+                        scaler.matchWidthOrHeight = (Screen.width > Screen.height) ? 1.0f : 0.5f;
+                    }
+                }
+            }
+        }
+
         public void ShowChapterSelect()
         {
             if (chapterPanelObj == null) return;

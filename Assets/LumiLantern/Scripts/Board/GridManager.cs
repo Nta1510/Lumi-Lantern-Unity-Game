@@ -112,6 +112,8 @@ namespace LumiLantern
             }
         }
 
+        private float lastAspect = -1f;
+
         public void SetInputEnabled(bool enabled)
         {
             isInputEnabled = enabled;
@@ -119,17 +121,42 @@ namespace LumiLantern
 
         private void Update()
         {
+            Camera cam = Camera.main;
+            if (cam != null && currentLevel != null)
+            {
+                if (Mathf.Abs(lastAspect - cam.aspect) > 0.02f)
+                {
+                    lastAspect = cam.aspect;
+                    AdjustCamera(currentLevel);
+                }
+            }
+
             if (!isInputEnabled || currentLevel == null) return;
 
-            // Handle touch or mouse clicks
-            if (Input.GetMouseButtonDown(0))
+            // PC Keyboard Shortcuts
+            HandleKeyboardInput();
+
+            // Unified Touch & Mouse Input
+            bool inputTriggered = false;
+            Vector3 screenPos = Vector3.zero;
+
+            if (Input.touchCount > 0)
             {
-                Camera cam = Camera.main;
-                if (cam == null) return;
+                Touch t = Input.GetTouch(0);
+                if (t.phase == TouchPhase.Began)
+                {
+                    inputTriggered = true;
+                    screenPos = t.position;
+                }
+            }
+            else if (Input.GetMouseButtonDown(0))
+            {
+                inputTriggered = true;
+                screenPos = Input.mousePosition;
+            }
 
-                Vector3 screenPos = Input.mousePosition;
-                if (Input.touchCount > 0) screenPos = Input.GetTouch(0).position;
-
+            if (inputTriggered && cam != null)
+            {
                 // Only block board clicks if clicking on an interactive Button or modal dialog
                 bool isOverInteractiveUI = false;
                 if (UnityEngine.EventSystems.EventSystem.current != null)
@@ -169,6 +196,45 @@ namespace LumiLantern
                     {
                         OnTileClicked(view);
                     }
+                }
+            }
+        }
+
+        private void HandleKeyboardInput()
+        {
+            // Z or U: Undo
+            if (Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.U))
+            {
+                Undo();
+            }
+            // R: Reset board
+            if (Input.GetKeyDown(KeyCode.R))
+            {
+                ResetBoard();
+            }
+            // H: Request Hint
+            if (Input.GetKeyDown(KeyCode.H))
+            {
+                GameManager.Instance?.RequestHint();
+            }
+            // Space / Enter: Next level if win modal is open
+            if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return))
+            {
+                if (UIManager.Instance != null && UIManager.Instance.IsWinModalOpen())
+                {
+                    GameManager.Instance?.GoNextLevel();
+                }
+            }
+            // Escape: Toggle Chapter Select
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                if (UIManager.Instance != null && UIManager.Instance.IsChapterSelectOpen())
+                {
+                    GameManager.Instance?.CloseChapterSelect();
+                }
+                else
+                {
+                    GameManager.Instance?.OpenChapterSelect();
                 }
             }
         }

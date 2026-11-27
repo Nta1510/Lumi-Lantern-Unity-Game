@@ -19,6 +19,11 @@
 *.booproj
 *.SVd
 
+# Build artifacts
+*.apk
+*.aab
+*.exe
+
 # OS
 .DS_Store
 Thumbs.db
